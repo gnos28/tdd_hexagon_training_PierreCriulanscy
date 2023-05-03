@@ -1,10 +1,24 @@
-import { Message, MessageRepository } from "./postMessage.useCase";
+import { Message } from "./message";
+import { MessageRepository } from "./message.repository";
 
-let message: Message;
+let messages: Message[] = [];
 
 export const messageRepository: MessageRepository = {
-  save: (msg: Message) => {
-    message = msg;
+  save: async (msg: Message) => {
+    messages = [...messages, msg];
+
+    return Promise.resolve();
   },
-  get: () => message
+
+  saveAll: async (msg: Message[]) => {
+    messages = [...messages, ...msg];
+    return Promise.resolve();
+  },
+
+  get: async () => Promise.resolve(messages[messages.length - 1]),
+
+  getAll: async () => Promise.resolve(messages),
+
+  getById: async (id) =>
+    Promise.resolve(messages.filter((message) => message.id === id)[0]),
 };

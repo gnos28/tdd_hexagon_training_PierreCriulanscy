@@ -1,9 +1,8 @@
+import { Message } from "../message";
 import { messageRepository } from "../message.inmemory.repository";
 import {
   postMessageUseCase,
-  Message,
   PostMessageCommand,
-  MessageRepository,
   DateProvider,
   MessageTooLongError,
   EmptyMessageError,
@@ -17,24 +16,24 @@ describe("Feature : Posting a message", () => {
   });
 
   describe("Rule: A message can contain a maximum of 280 caracters", () => {
-    test("Alice can post a message on her timeline", () => {
+    test("Alice can post a message on her timeline", async () => {
       fixture.givenNowIs(new Date("2023-02-07T10:40:00.000Z"));
-      fixture.whenUserPostAMessage({
+      await fixture.whenUserPostAMessage({
         id: "message-id",
         text: "hello world",
         author: "Alice",
       });
-      fixture.thenPostedMessageShouldBe({
+      await fixture.thenPostedMessageShouldBe({
         id: "message-id",
         text: "hello world",
         author: "Alice",
         publishedAt: new Date("2023-02-07T10:40:00.000Z"),
       });
     });
-    test("Alice cannot post a message with more than 280 caracters", () => {
+    test("Alice cannot post a message with more than 280 caracters", async () => {
       const textWithLengthOf281 = Array(281).fill("a").join("");
       fixture.givenNowIs(new Date("2023-02-07T10:40:00.000Z"));
-      fixture.whenUserPostAMessage({
+      await fixture.whenUserPostAMessage({
         id: "message-id",
         text: textWithLengthOf281,
         author: "Alice",
@@ -43,18 +42,18 @@ describe("Feature : Posting a message", () => {
     });
   });
   describe("Rule: message cannot be empty", () => {
-    test("Alice cannot post a message with an empty text", () => {
+    test("Alice cannot post a message with an empty text", async () => {
       fixture.givenNowIs(new Date("2023-02-07T10:40:00.000Z"));
-      fixture.whenUserPostAMessage({
+      await fixture.whenUserPostAMessage({
         id: "message-id",
         text: "",
         author: "Alice",
       });
       fixture.thenErrorShouldBe(EmptyMessageError);
     });
-    test("Alice cannot post a message with only spaces", () => {
+    test("Alice cannot post a message with only spaces", async () => {
       fixture.givenNowIs(new Date("2023-02-07T10:40:00.000Z"));
-      fixture.whenUserPostAMessage({
+      await fixture.whenUserPostAMessage({
         id: "message-id",
         text: "           ",
         author: "Alice",
@@ -76,19 +75,19 @@ const createFixture = () => {
     givenNowIs: (date: Date) => {
       now = date;
     },
-    whenUserPostAMessage: (postMessageCommand: PostMessageCommand) => {
+    whenUserPostAMessage: async (postMessageCommand: PostMessageCommand) => {
       try {
         thrownError = undefined;
-        postMessageUseCase({
+        await postMessageUseCase({
           messageRepository,
           dateProvider,
-        }).handle(postMessageCommand);
+        })(postMessageCommand);
       } catch (err) {
         thrownError = err;
       }
     },
-    thenPostedMessageShouldBe: (expectedMessage: Message) => {
-      expect(expectedMessage).toEqual(messageRepository.get());
+    thenPostedMessageShouldBe: async (expectedMessage: Message) => {
+      expect(expectedMessage).toEqual(await messageRepository.get());
     },
     thenErrorShouldBe: (expectedError: new () => Error) => {
       expect(thrownError).toBeInstanceOf(expectedError);

@@ -5,7 +5,7 @@ import {
   PostMessageCommand,
   postMessageUseCase,
 } from "./src/postMessage.useCase";
-import { messageRepository } from "./src/message.inmemory.repository";
+import { fileSystemMessageRepository } from "./src/message.fs.repository";
 
 const program = new Command();
 
@@ -20,7 +20,7 @@ program
     new Command("post")
       .argument("<user>", "the current user")
       .argument("<message>", "the message to post")
-      .action((user, message) => {
+      .action(async (user, message) => {
         try {
           const postMessageCommand: PostMessageCommand = {
             id: "azeaze",
@@ -28,12 +28,12 @@ program
             text: message,
           };
 
-          postMessageUseCase({
-            messageRepository,
+          await postMessageUseCase({
+            messageRepository: fileSystemMessageRepository,
             dateProvider,
-          }).handle(postMessageCommand);
+          })(postMessageCommand);
           console.log("OK");
-          console.table([messageRepository.get()]);
+          console.table([await fileSystemMessageRepository.get()]);
           process.exit(0);
         } catch (err) {
           console.error(err.message);
